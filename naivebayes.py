@@ -193,6 +193,8 @@ def naivebayes (dirs):
     vocab = defaultdict(int)
     for dir in dirs:
         vocab.update(files2countdict(glob.glob(dir+"/*")))
+
+    total_num_words_all_docs = sum(vocab.values())
     # Set all counts to 0
     vocab = defaultdict(int, zip(vocab.iterkeys(), [0 for i in vocab.values()]))
 
@@ -203,21 +205,16 @@ def naivebayes (dirs):
         countdict = defaultdict(int, vocab)
         # Add in counts from this class
         countdict.update(files2countdict(glob.glob(dir+"/*")))
-        #***
         # Here turn the "countdict" dictionary of word counts into
         # into a dictionary of smoothed word probabilities
-        total_num_words = sum(countdict.values())
-        x = len(countdict)
+        x = len(countdict) + 1 # or len vocab?
+        total_num_words = sum(countdict.values()) + (x/m)
         for key in countdict:
-            val = (countdict[key] + 1/m)/(total_num_words + x/m)
+            val = (countdict[key] + 1/m)/total_num_words
             countdict[key] = val
         # check the sum and make sure it's 1
-        classes.append([dir, countdict, total_num_words])#(dir,countdict)) # MODIFIED return
-    # add total number of all words in there
-    total_num_words_all_docs = 0.0
-    for category in classes:
-        # add the total number of all words
-        total_num_words_all_docs += category[2]
+        countdict['\/unknown\/'] = (1/m)/total_num_words
+        classes.append([dir, countdict, total_num_words])
     return (classes, total_num_words_all_docs) # MODIFIED return
 
 def classify (classes, filename):
@@ -238,53 +235,17 @@ def classify (classes, filename):
         # 2. Adding  the log probability of that word for that class
         # ***
         countdict = c[1]
-        # for every x_i in the document find the P(x_i | c)
-        tokens = files2countdict([filename])#tokenize_file(filename)#files2countdict([filename])
+        tokens = files2countdict([filename]) #tokenize_file(filename)#files2countdict([filename])
         x = len(countdict)
-        # first update the probabilities
-        total_num_words = c[2] + x/m
         for token in tokens:
+            key = token
             if token not in countdict:
-#                total_num_words += 1/m
-                # since the total num words has increased by 1/m,
-                # the probabilities of everything changed
-#                for countdict_token in countdict: # update all the probs
-#                    countdict[countdict_token] *= ((total_num_words-(1/m))/total_num_words)
-                countdict[token] = (1/m)/total_num_words # add the new probability
-        # now product it up
-        for token in tokens:
-            if token not in countdict:
-                print "Error: token was not properly added to countdict"
-            else:
-                score += (math.log(countdict[token])*tokens[token])
-        # we also need to add on the log(P(c))
-        # P(c) is all words in a category / all words in all N documents
-        score += math.log(total_num_words/total_num_words_all_docs)
+                key = '\/unknown\/'
+            score += (math.log(countdict[key])*tokens[token])
+        score += math.log(sum(countdict.values())/total_num_words_all_docs)
         answers.append((score, c[0]))
     # answers.sort()
     return answers
-
-def tokenize_file(file, is_lower=True, has_alphanum=True):
-    # later: try stripping the headers here
-#    s = set() # TODO should this be a set or a list
-    s = []
-    #for word in nltk.word_tokenize(open(file).read()):
-    #for word in nltk.regexp_tokenize(open(file).read(), pattern=r'\w+([.,]\w+)*|\S+'):
-    #TreebankWordTokenizer()
-    t =TreebankWordTokenizer()
-    for word in t.tokenize_by_web_with_overpunc(open(file).read()):
-        if has_alphanum:
-            if is_lower:
-                s.append(word.lower())
-            else:
-                s.append(word)
-        else:
-            if not word.isalnum():
-                for char in word:
-                    if not char.isalnum():
-                        s.append(char)
-    # also add web tokens
-    return s
 
 def files2countdict (files, to_lower=True, has_alphanum=True):
     """Given an array of filenames, return a dictionary with keys
@@ -309,11 +270,6 @@ def files2countdict (files, to_lower=True, has_alphanum=True):
                     for char in word:
                         if not char.isalnum():
                             d[char] += 1
-        # also add web tokens
-        #for word in t.tokenize_by_web(open(file).read()):
-            # only take web tags, ones that start and end with < >
-        #    if word[0] == '<' and word [-1] == '>':
-        #        d[word.lower()] += 1
     return d
 
 if __name__ == '__main__':
@@ -343,4 +299,4 @@ if __name__ == '__main__':
             wrong += 1
     print wrong
     print wrong/len(testfiles)
-#    pickle.dump(nb, open("classifier.pickle",'w'))
+ #   pickle.dump(nb, open("classifier.pickle",'w'))
