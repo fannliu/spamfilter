@@ -109,3 +109,43 @@ class TreebankWordTokenizer():
             else:
                 ret_text.append(new_text[i])
         return ret_text
+
+    def tokenize_header_strip(self, text):
+        r = re.compile("\r*\n\r*\n")
+        new_text = r.split(text)
+        header = new_text[0]
+        hlines = header.split("\r\n")
+        h_to_b = []
+        hinfo = {}
+        hinfo['domains'] = []
+        hinfo['subjects'] = []
+        hinfo['ips'] = []
+        hinfo['from'] = []
+        ip = re.compile('Received:.*\[(\d{,3}.\d{,3}.\d{,3}.\d{,3})\]')
+        from_email = re.compile('From:.* [<]?(.*@([^>]*))')
+        subject = re.compile('Subject: (.*)')
+        for line in hlines:
+            m= ip.match(line)
+            if m is None:
+                m = from_email.match(line)
+                if m is None:
+                    m = subject.match(line)
+                    if m is not None:
+                        hinfo['subjects'] += [m.group(1)]
+                else:
+                    hinfo['from'] += [m.group(1)]
+                    hinfo['domains'] += [m.group(2)]
+            else:
+                hinfo['ips'] += [m.group(1)]
+        h_keep = []
+        for a in hinfo.values():
+            h_keep.extend(a)
+        hbody = "\r\n".join(h_keep)
+        body = "\r\n".join(new_text[1:])
+        body += hbody  # keep retained header info in the body
+        return [self.tokenize(body), self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
+       
+
+    def tokenize_everything(self, text):
+        tokens = self.tokenize_header_strip(text)
+        return tokens[1]  #right now returning header striped while retaining header info in the body, web, overpunc

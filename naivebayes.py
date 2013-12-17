@@ -257,7 +257,9 @@ def files2countdict (files, to_lower=True, has_alphanum=True):
         # for word in nltk.word_tokenize(open(file).read()): #.split():
         # for word in nltk.regexp_tokenize(open(file).read(), pattern=r'\w+([.,]\w+)*|\S+'):
         t =TreebankWordTokenizer()
-        for word in t.tokenize_by_web_with_overpunc(open(file).read()):
+#        for word in t.tokenize_by_web_with_overpunc(open(file).read()):
+#        for word in t.tokenize_header_strip(open(file).read()):
+        for word in t.tokenize_everything(open(file).read()):
             if has_alphanum:
                 if word.isupper():
                     d['num_capitalized_words'] += 1
@@ -281,8 +283,10 @@ if __name__ == '__main__':
     nb = naivebayes (dirs)
 #    cap = cap_training(dirs)
 #    punc = punc_training(dirs)
-    spam = 'spamham/spam'
-    ham = 'spamham/ham'
+    spam_1 = 'spamham/spam'
+    ham_1 = 'spamham/ham'
+    spam_2 = 'hw6-spamham-data/spam/'
+    ham_2 = 'hw6-spamham-data/ham/'
     wrong = 0.0
     for testfile in testfiles:
         s = classify(nb, testfile)
@@ -295,7 +299,7 @@ if __name__ == '__main__':
 #              (0*s[1][0] + 0*c[1][0] + 1*p[1][0], s[1][1])]
         s.sort()
         print s
-        if s[1][1] != spam:
+        if s[1][1] != ham_1:
             wrong += 1
     print wrong
     print wrong/len(testfiles)
