@@ -1,5 +1,7 @@
 Header stripping so that it leaves in retained info + tokenize_by_web_with_overpunc
 hw6 dataset:
+dev: 226 ham
+
 ham:
 1.0
 0.001
@@ -15,3 +17,24 @@ spamham/ham:
 spamham/spam:
 21.0
 0.0177966101695
+
+
+Header stripping so that it leaves in retained info + tokenize_by_web_with_overpunc
+hw6 dataset:
+dev: 236 ham
+
+ham:
+2.0
+0.002
+
+spam:
+26.0
+0.026
+
+spamham/ham:
+4.0
+0.00338983050847
+
+spamham/spam:
+59.0
+0.05

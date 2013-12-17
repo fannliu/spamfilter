@@ -299,7 +299,7 @@ if __name__ == '__main__':
 #              (0*s[1][0] + 0*c[1][0] + 1*p[1][0], s[1][1])]
         s.sort()
         print s
-        if s[1][1] != ham_1:
+        if s[1][1] != spam_2:
             wrong += 1
     print wrong
     print wrong/len(testfiles)
