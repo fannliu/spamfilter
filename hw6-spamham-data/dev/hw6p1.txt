@@ -1,4 +1,3 @@
-
 We tried removing the headers with normal Treebank tokenization. 
 spam error rate: 0.041
 ham error rate: 0.002
