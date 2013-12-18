@@ -121,9 +121,11 @@ class TreebankWordTokenizer():
         hinfo['subjects'] = []
         hinfo['ips'] = []
         hinfo['from'] = []
+        hinfo['content'] = []
         ip = re.compile('Received:.*\[(\d{,3}.\d{,3}.\d{,3}.\d{,3})\]')
         from_email = re.compile('From:.* [<]?(.*@([^>]*))')
         subject = re.compile('Subject: (.*)')
+        content_type = re.compile('Content-Type: ([^;]*)')
         for line in hlines:
             m= ip.match(line)
             if m is None:
@@ -132,6 +134,10 @@ class TreebankWordTokenizer():
                     m = subject.match(line)
                     if m is not None:
                         hinfo['subjects'] += [m.group(1)]
+                    else:
+                        m = content_type.match(line)
+                        if m is not None:
+                            hinfo['content'] += [m.group(1)]
                 else:
                     hinfo['from'] += [m.group(1)]
                     hinfo['domains'] += [m.group(2)]
@@ -143,7 +149,8 @@ class TreebankWordTokenizer():
         hbody = "\r\n".join(h_keep)
         body = "\r\n".join(new_text[1:])
         body += hbody  # keep retained header info in the body
-        return [self.tokenize(body), self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
+        print hinfo
+        return [self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
        
 
     def tokenize_everything(self, text):

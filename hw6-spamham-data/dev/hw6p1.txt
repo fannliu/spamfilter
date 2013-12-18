@@ -1,0 +1,8 @@
+
+We tried removing the headers with normal Treebank tokenization. 
+
+Removing the headers, but leaving in the domain, IP addresses, from email, and subject with normal Treebank tokenization. 
+
+Removing the headers with Treebank tokenization but keeping html tags intact. 
+
+Removing the headers with Treebank tokenization but keeping html tags intact and 
