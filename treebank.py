@@ -96,18 +96,20 @@ class TreebankWordTokenizer():
         curr_exclaimed = []
         ret_text = []
         has_exclaimed = False
+        punc = ['=']
         for i in range(len(new_text)):
-            if new_text[i] == '!' and not has_exclaimed:
-                has_exclaimed = True
-                curr_exclaimed.append('!')
-            elif new_text[i] == '!' and has_exclaimed:
-                curr_exclaimed.append('!')
-            elif new_text[i] != '!' and has_exclaimed:
-                has_exclaimed = False
-                new_exclaim = ''.join(curr_exclaimed)
-                ret_text.append(new_exclaim)
-            else:
-                ret_text.append(new_text[i])
+            for p in punc:
+                if new_text[i] == p and not has_exclaimed:
+                    has_exclaimed = True
+                    curr_exclaimed.append(p)
+                elif new_text[i] == p and has_exclaimed:
+                    curr_exclaimed.append(p)
+                elif new_text[i] != p and has_exclaimed:
+                    has_exclaimed = False
+                    new_exclaim = ''.join(curr_exclaimed)
+                    ret_text.append(new_exclaim)
+                else:
+                    ret_text.append(new_text[i])
         return ret_text
 
     def tokenize_header_strip(self, text):
@@ -143,9 +145,10 @@ class TreebankWordTokenizer():
         hbody = "\r\n".join(h_keep)
         body = "\r\n".join(new_text[1:])
         body += hbody  # keep retained header info in the body
-        return [self.tokenize(body), self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
-       
+        return [self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
+       # compare to self.tokenize()
 
     def tokenize_everything(self, text):
         tokens = self.tokenize_header_strip(text)
-        return tokens[1]  #right now returning header striped while retaining header info in the body, web, overpunc
+#        return tokens
+        return tokens[0]  #right now returning header striped while retaining header info in the body, web, overpunc

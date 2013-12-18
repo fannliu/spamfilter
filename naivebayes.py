@@ -93,7 +93,7 @@ def punc_classify(classes, filename):
             score += math.log(countdict[token])
         # we also need to add on the log(P(c))
         # P(c) is all words in a category / all words in all N documents
-        score += math.log(total_num_punc/total_num_punc_all_docs) 
+        score += math.log(total_num_punc/total_num_punc_all_docs)
         answers.append((score, c[0]))
     # answers.sort()
     return answers
@@ -283,6 +283,7 @@ if __name__ == '__main__':
     nb = naivebayes (dirs)
 #    cap = cap_training(dirs)
 #    punc = punc_training(dirs)
+    # CHECK THE EQUAL SIGNS TODO
     spam_1 = 'spamham/spam'
     ham_1 = 'spamham/ham'
     spam_2 = 'hw6-spamham-data/spam/'
