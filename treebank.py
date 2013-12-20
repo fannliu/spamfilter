@@ -11,7 +11,6 @@ using the conventions used by the Penn Treebank.
 """
 
 import re
-#from api import *
 
 ######################################################################
 #{ Regexp-based treebank tokenizer
@@ -73,7 +72,7 @@ class TreebankWordTokenizer():
         new_text = self.tokenize(text)
         # find all tokenized html tags
         # this is <word> should have no other words in there
-        # may find an issue with /
+        # </word> should work too
         ret_text = []
         count = 0
         for i in range(len(new_text)):
@@ -91,26 +90,74 @@ class TreebankWordTokenizer():
         return ret_text
 
     def tokenize_by_web_with_overpunc(self, text):
-        new_text = self.tokenize_by_web(text)
-        # do not split up exclamation points
+        ret_text = self.tokenize_by_web(text)
+        # overpunctuation tokenization (don't split up ===)
         curr_exclaimed = []
-        ret_text = []
         has_exclaimed = False
         punc = ['=']
-        for i in range(len(new_text)):
+        next_text = []
+        for i in range(len(ret_text)):
             for p in punc:
-                if new_text[i] == p and not has_exclaimed:
+                if ret_text[i] == p and not has_exclaimed:
                     has_exclaimed = True
                     curr_exclaimed.append(p)
-                elif new_text[i] == p and has_exclaimed:
+                elif ret_text[i] == p and has_exclaimed:
                     curr_exclaimed.append(p)
-                elif new_text[i] != p and has_exclaimed:
+                elif ret_text[i] != p and has_exclaimed:
                     has_exclaimed = False
                     new_exclaim = ''.join(curr_exclaimed)
-                    ret_text.append(new_exclaim)
+                    next_text.append(new_exclaim)
+                else:
+                    next_text.append(ret_text[i])
+        return next_text
+
+    def tokenize_money(self, text):
+        # moneytag = re.compile('($)|(%)|(\d+.\d{2})|(\d+)')
+        # try just leaving in digits with their % or $, then
+        # count how many tokens are digits with % and $
+        digits = re.compile('\.*\d+')
+        ret_text = []
+        count = 0
+        new_text = self.tokenize_by_web_with_overpunc(text)
+        num_money_tokens = 0
+        for i in range(len(new_text)):
+            if i+2 < len(new_text):
+                if (new_text[i] == '$' and digits.match(new_text[i+1])) \
+                        or (digits.match(new_text[i]) and new_text[i+1] == '%') \
+                        or ((new_text[i].lower() == 'click' or \
+                                 new_text[i].lower() == 'order') and \
+                            (new_text[i+1].lower() == 'here' or \
+                                 new_text[i+1].lower() == 'me' or \
+                                 new_text[i+1].lower() == 'this' or \
+                                 new_text[i+1].lower() == 'now')):
+                    # then add this as a whole either $1.00, or 40% etc.
+                    count += 1
+                    ret_text.append(new_text[i] + new_text[i+1])
+                    num_money_tokens += 1
+                elif count == 1:
+                    count = 0
                 else:
                     ret_text.append(new_text[i])
-        return ret_text
+        return (ret_text, num_money_tokens)
+
+    def get_money_tokens(self, text):
+        # moneytag = re.compile('($)|(%)|(\d+.\d{2})|(\d+)')
+        # try just leaving in digits with their % or $, then
+        # count how many tokens are digits with % and $
+        digits = re.compile('\.*\d+')
+        money_tokens = []
+        count = 0
+        new_text = self.tokenize_by_web_with_overpunc(text)
+        for i in range(len(new_text)):
+            if i+2 < len(new_text):
+                if (new_text[i] == '$' and digits.match(new_text[i+1])) or (digits.match(new_text[i]) and new_text[i+1] == '%'):
+                    # then add this as a whole either $1.00, or 40% etc.
+                    count += 1
+                    money_tokens.append(new_text[i] + new_text[i+1])
+                    # print new_text[i] + new_text[i+1]
+                elif count == 1:
+                    count = 0
+        return money_tokens
 
     def tokenize_header_strip(self, text):
         r = re.compile("\r*\n\r*\n")
@@ -123,9 +170,11 @@ class TreebankWordTokenizer():
         hinfo['subjects'] = []
         hinfo['ips'] = []
         hinfo['from'] = []
+        hinfo['content'] = []
         ip = re.compile('Received:.*\[(\d{,3}.\d{,3}.\d{,3}.\d{,3})\]')
         from_email = re.compile('From:.* [<]?(.*@([^>]*))')
         subject = re.compile('Subject: (.*)')
+        content_type = re.compile('Content-Type: ([^;]*)')
         for line in hlines:
             m= ip.match(line)
             if m is None:
@@ -134,6 +183,10 @@ class TreebankWordTokenizer():
                     m = subject.match(line)
                     if m is not None:
                         hinfo['subjects'] += [m.group(1)]
+                    else:
+                        m = content_type.match(line)
+                        if m is not None:
+                            hinfo['content'] += [m.group(1)]
                 else:
                     hinfo['from'] += [m.group(1)]
                     hinfo['domains'] += [m.group(2)]
@@ -145,10 +198,10 @@ class TreebankWordTokenizer():
         hbody = "\r\n".join(h_keep)
         body = "\r\n".join(new_text[1:])
         body += hbody  # keep retained header info in the body
-        return [self.tokenize_by_web_with_overpunc(body), hinfo] # change this once we decide what combos we want
-       # compare to self.tokenize()
+        (tokens, num_money_tokens) = self.tokenize_money(body)
+        return [tokens, hinfo, num_money_tokens]
 
     def tokenize_everything(self, text):
         tokens = self.tokenize_header_strip(text)
-#        return tokens
-        return tokens[0]  #right now returning header striped while retaining header info in the body, web, overpunc
+        # right now returning header striped while retaining header info in the body, web, overpunc
+        return tokens

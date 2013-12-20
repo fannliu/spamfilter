@@ -1,0 +1,20 @@
+We tried removing the headers with normal Treebank tokenization.
+spam error rate: 0.041
+ham error rate: 0.002
+
+Removing the headers, but leaving in the domain, IP addresses, from email, content-type, and subject with normal Treebank tokenization.
+spam error rate: 0.012
+ham error rate: 0.001
+
+Removing the headers (leaving in info)  with Treebank tokenization but keeping html tags intact.
+spam error rate: 0.008
+ham error rate: 0.001
+
+Removing the headers (leaving in info) with Treebank tokenization but keeping html tags intact and grouping '!' found together.
+spam error rate: 0.009
+ham error rate: 0.001
+
+Tried:
+number of punctuation (!, $, *), didn't work
+number of digits didn't work
+number of all punctuation (any non alphanumeric character) was terrible

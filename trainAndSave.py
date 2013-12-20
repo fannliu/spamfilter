@@ -10,7 +10,7 @@ if __name__ == '__main__':
         if os.path.isdir(sys.argv[1]) and os.path.isdir(sys.argv[2]):
             print 'training...'
             predictor = Predictor(sys.argv[1], sys.argv[2])
-            print predictor.predict('bla')
+            # print predictor.predict()
             # save to pickle
             print 'saving predictor to pickle'
             pickle.dump(predictor, open('predictor.pickle', 'w'))
